@@ -84,8 +84,13 @@
       "parameters": {
         "endpointUrl": "https://YOUR-N8N-INSTANCE/mcp/acme-trust-compliance",
         "serverTransport": "httpStreamable",
-        "authentication": "none",
+        "authentication": "bearerAuth",
         "include": "all"
+      },
+      "credentials": {
+        "httpBearerAuth": {
+          "name": "Acme MCP token"
+        }
       }
     },
     {

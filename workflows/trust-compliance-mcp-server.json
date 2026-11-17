@@ -13,9 +13,14 @@
         300
       ],
       "parameters": {
-        "authentication": "none",
+        "authentication": "bearerAuth",
         "path": "acme-trust-compliance",
         "instructions": "Acme SaaS Trust & Compliance tools. Answer security and compliance questions only from these tools. Order: find_approved_answer first, then search_policies, plus get_compliance_status for certifications, audits and testing dates. Cite policy section IDs. Never invent facts. Use submit_for_review for anything that will be sent to a customer in writing, any gap, and any restricted topic."
+      },
+      "credentials": {
+        "httpBearerAuth": {
+          "name": "Acme MCP token"
+        }
       }
     },
     {

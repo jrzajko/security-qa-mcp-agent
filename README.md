@@ -89,7 +89,7 @@ Without a shared server, every assistant that needs security knowledge (sales, c
 
 With MCP:
 - **One place to maintain.** Change a tool in the server and every connected client gets it on its next connection.
-- **Any client.** The same server works with n8n agents, LangGraph, Claude Desktop or other MCP clients.
+- **Any client.** The same server works with n8n agents, LangGraph, Claude or other MCP clients. Here it already has two: the n8n Security Q&A agent and Claude itself, added as a custom connector (see [Connect Claude as a second client](#connect-claude-as-a-second-client)).
 - **Backend-agnostic.** Today the tools read n8n Data Tables. In production each tool would read SharePoint, Confluence or a GRC platform; the clients don't change.
 
 The trade-off: if only one agent ever used these tools, MCP would add setup for little gain. The value comes from the second and third clients.
@@ -109,11 +109,25 @@ You need an n8n instance (cloud or self-hosted, with Data Tables and the MCP nod
    | `acme_approved_answers` | `data/approved_answers.csv` (12 rows) |
    | `acme_compliance_status` | `data/compliance_status.csv` (7 rows) |
    | `acme_review_queue` | `data/review_queue_template.csv` (headers only) |
-2. **Import `workflows/trust-compliance-mcp-server.json`** and publish it. Copy the MCP Server Trigger's **Production URL**.
-3. **Import `workflows/security-qa-agent.json`**. In the *Acme Trust & Compliance (MCP)* node, replace `https://YOUR-N8N-INSTANCE/...` with the URL from step 2. Select your Anthropic credential on the *Claude Chat Model* node.
-4. Click **Open chat** and try the prompts below.
+2. **Create a Bearer Auth credential** named `Acme MCP token` holding a long random token (e.g. from a password manager or `openssl rand -hex 32`). Paste it with no leading or trailing spaces: a stray space or newline makes every request fail with *"Authorization data is wrong!"*.
+3. **Import `workflows/trust-compliance-mcp-server.json`**. The MCP Server Trigger is set to Bearer Auth; select `Acme MCP token`, then publish. Copy the trigger's **Production URL**.
+4. **Import `workflows/security-qa-agent.json`**. In the *Acme Trust & Compliance (MCP)* node, replace `https://YOUR-N8N-INSTANCE/...` with the URL from step 3 and select `Acme MCP token`. Select your Anthropic credential on the *Claude Chat Model* node. Save.
+5. Click **Open chat** and try the prompts below.
 
-The server uses no authentication so the demo is easy to run. For real use, switch the MCP Server Trigger to bearer or header auth and set the same credential on the client node.
+Requests without the token are rejected, so only clients you've given it to can use the tools. Both n8n workflows share one credential, so rotating the token means updating one credential (plus any external clients).
+
+### Connect Claude as a second client
+
+The same server can be added to Claude as a custom connector, so Claude uses the four Acme tools directly, with no changes to n8n.
+
+1. In Claude, open **Plugins** in the left sidebar → **Add** → **Add custom connector**.
+2. Name it (e.g. *Acme Trust & Compliance*) and paste the server's Production URL.
+3. **Authentication: choose "No sign-in".** The server uses a fixed token, not OAuth. Leaving it on "Sign in now" makes Claude attempt OAuth and the server answers 403.
+4. **Request headers → Add header:** name `Authorization`, value `Bearer <your token>` (one space after *Bearer*, nothing after the token).
+5. Leave transport on **Streamable HTTP** and click **Add**.
+6. In a new chat, turn it on via **+ → Connectors** and ask a security question.
+
+Claude doesn't get the n8n agent's system prompt. It only receives what the server provides: the tool descriptions and the server instructions (check approved answers first, cite section IDs, never invent facts, escalate gaps). Rules placed in the server apply to every client; rules in an agent's prompt apply only to that agent.
 
 ## Demo script
 
@@ -127,6 +141,7 @@ The server uses no authentication so the demo is easy to run. For real use, swit
 | "Can we commit to 24-hour breach notification in the contract?" | Restricted: policy says 48h, so it's routed to the CISO |
 | Open the `acme_review_queue` table | The human-in-the-loop record (tip: clear it before presenting so new rows appear live) |
 | Open the server workflow | One library, four tools, any client |
+| Ask Claude (with the connector on) the same encryption question | Second client: same tools, same data, same citations, nothing rebuilt |
 
 ## Data
 
@@ -137,4 +152,4 @@ The server uses no authentication so the demo is easy to run. For real use, swit
 - **Search is keyword substring matching.** Multi-word phrases can miss; the agent compensates by retrying with stems. Next: semantic search (embeddings) behind `search_policies`, without changing the tool's interface.
 - **Confidence is the model's judgement plus rules,** not measured. The LangGraph [questionnaire responder](https://github.com/jrzajko/ai-questionnaire-responder) shows the measured approach (grounding checks, calibrated scoring, evals).
 - **Reviewers aren't notified.** Next: email or Slack alert on new queue rows, and approved rows feeding back into `acme_approved_answers`.
-- **Second client.** Point the questionnaire responder (LangGraph supports MCP clients) or Claude Desktop at the same server to show reuse.
+- **More clients.** Claude is connected as a second client. Next: point the questionnaire responder (LangGraph supports MCP clients) at the same server, or add a read-only customer-success agent to show per-client tool access.
