@@ -9,6 +9,8 @@ Four questions covering the four behaviours the assistant needs: reuse an approv
 | 3 | A prospect asks: are you PCI DSS compliant? | `find_approved_answer("PCI")`, `search_policies("PCI")`, `search_policies("payment")`, `find_approved_answer("payment")` → nothing, `submit_for_review` | Low | Head of Security (CISO) |
 | 4 | Legal at a prospect wants us to commit to breach notification within 24 hours in the contract. Can we say yes? | `find_approved_answer("breach notification")` → no match, `search_policies("notif")` → IR-4, `submit_for_review` | Medium, restricted | Head of Security (CISO) |
 
+A fifth question was asked live in the n8n chat for the README screenshots: *"Prospect questionnaire: where is customer data hosted, and do you support SSO with SCIM provisioning?"* The agent reused approved answers (`hosting`, `sso`), checked SCIM in policy, answered with [HA-1, HA-2, IAM-1, IAM-2], rated it high, and logged it for the Solutions Engineer because it was going into a written questionnaire.
+
 ## Replies
 
 **1. Encryption at rest**

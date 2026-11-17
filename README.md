@@ -6,6 +6,37 @@ It is built as **one AI agent with one tool connection**: an MCP client that plu
 
 > The company, policies and evidence are fictional ("Acme SaaS"). They reuse the policy pack from [ai-questionnaire-responder](https://github.com/jrzajko/ai-questionnaire-responder).
 
+## Demo
+
+**Asking a question.** A colleague pastes a prospect's questionnaire item. The agent answers with policy citations, rates its confidence and logs the answer for sign-off because it's going out in writing. The log on the right shows each MCP tool call it chose to make.
+
+![Chat answer with citations and the agent's tool calls](docs/images/03-chat-answer-and-tool-calls.png)
+
+**Inside one tool call.** The agent called `find_approved_answer` over MCP with the keyword `hosting` and got back an answer the Head of Security had already approved.
+
+![MCP tool call input and output](docs/images/04-mcp-tool-call-detail.png)
+
+**The review queue.** Anything written, uncertain or restricted lands here with its sources, confidence, reason and reviewer. Gaps and contractual asks go to the Head of Security; confident written answers go to the Solutions Engineer.
+
+![Review queue Data Table](docs/images/05-review-queue.png)
+
+<details>
+<summary><b>The two workflows and the policy data</b></summary>
+
+**MCP server:** one MCP Server Trigger with four tools attached.
+
+![Trust & Compliance MCP server workflow](docs/images/01-mcp-server-workflow.png)
+
+**Agent (MCP client):** chat trigger, Claude, memory, and a single MCP Client node. No tools are wired into the agent directly.
+
+![Security Q&A agent workflow](docs/images/02-agent-workflow.png)
+
+**Policy library:** the Acme policy pack as one row per section, so every claim can cite a section ID.
+
+![Policy sections Data Table](docs/images/06-policy-sections-table.png)
+
+</details>
+
 ## Architecture
 
 ```mermaid
@@ -92,7 +123,7 @@ The server uses no authentication so the demo is easy to run. For real use, swit
 | "For an RFP: when was your last pen test, and can we send the full report?" | Agent combines policy and compliance evidence, and escalates the full-report request |
 | "Are you PCI DSS compliant?" | Gap: says "not covered", doesn't guess, escalates |
 | "Can we commit to 24-hour breach notification in the contract?" | Restricted: policy says 48h, so it's routed to the CISO |
-| Open the `acme_review_queue` table | The human-in-the-loop record |
+| Open the `acme_review_queue` table | The human-in-the-loop record (tip: clear it before presenting so new rows appear live) |
 | Open the server workflow | One library, four tools, any client |
 
 ## Data
