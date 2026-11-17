@@ -6,8 +6,6 @@ It is built as **one AI agent with one tool connection**: an MCP client that plu
 
 > The company, policies and evidence are fictional ("Acme SaaS"). They reuse the policy pack from [ai-questionnaire-responder](https://github.com/jrzajko/ai-questionnaire-responder).
 
-![Demo: the agent, the MCP server, a live question, one tool call, and the review queue](docs/images/demo.gif)
-
 ## Demo
 
 **Asking a question.** A colleague pastes a prospect's questionnaire item. The agent answers with policy citations, rates its confidence and logs the answer for sign-off because it's going out in writing. The log on the right shows each MCP tool call it chose to make.
@@ -118,6 +116,8 @@ You need an n8n instance (cloud or self-hosted, with Data Tables and the MCP nod
 The server uses no authentication so the demo is easy to run. For real use, switch the MCP Server Trigger to bearer or header auth and set the same credential on the client node.
 
 ## Demo script
+
+![Demo walkthrough: the agent, the MCP server, a live question, one tool call, and the review queue](docs/images/demo.gif)
 
 | Ask | What to point out |
 |---|---|
