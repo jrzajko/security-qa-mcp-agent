@@ -1,0 +1,8 @@
+item,status,detail,last_completed,next_due,evidence_available,source
+ISO/IEC 27001:2022,Certified,Scope: Acme Workspace platform and supporting operations at the London office. Surveillance audit passed in 2026.,2026-03-14,2027-03,Certificate on request,ISP-3
+SOC 2 Type II,Current,"Covers Security, Availability and Confidentiality. Audit period 2025-07-01 to 2026-06-30.",2026-08-20,2027-08,Report under NDA,ISP-3
+Penetration test,Completed,Independent third-party test of the application and infrastructure. Findings remediated within ISP-7 targets.,2026-06-12,2027-06,Executive summary under NDA (full report not shared),ISP-7
+Disaster recovery restore test,Passed,Full restore into the Ireland recovery region; RTO and RPO targets met.,2026-04-22,2027-04,Summary on request,BCP-3
+Incident response tabletop exercise,Completed,Annual tabletop covering a SEV1 customer data breach scenario.,2026-03-18,2027-03,Summary on request,IR-6
+ISO/IEC 42001 (AI management system),Not certified - in progress,Gap assessment completed. No certification date committed.,2026-05-30,No date committed,None,AIG-8
+UK ICO registration,Registered,Registered with the UK Information Commissioner's Office.,2026-01-10,2027-01,Registration number on request,PRV-2

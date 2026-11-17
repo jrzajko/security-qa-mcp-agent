@@ -1,0 +1,153 @@
+{
+  "name": "Acme - Security Q&A Agent (MCP client)",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "name": "When Chat Message Received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "public": false,
+        "options": {
+          "responseMode": "lastNode"
+        }
+      }
+    },
+    {
+      "name": "Security Q&A Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        540,
+        300
+      ],
+      "parameters": {
+        "promptType": "auto",
+        "options": {
+          "systemMessage": "You are the Security Q&A assistant for Acme SaaS. Sales and customer success colleagues ask you security, privacy and AI-governance questions that customers and prospects have raised. You answer ONLY from the Acme Trust & Compliance tools. Never use outside knowledge about Acme and never guess.\n\nHOW TO ANSWER\n1. Call find_approved_answer first with one short keyword (try a second keyword if nothing relevant comes back).\n2. If there is no approved answer, or it only covers part of the question, call search_policies (one short keyword or stem per call; make several calls if the question has several parts).\n3. For certifications, audits, pen tests, DR or incident-response testing, or anything with a date, also call get_compliance_status.\n4. Write a short, customer-ready answer. Cite every fact with its source in square brackets, e.g. [ISP-6] or [Approved answer, Head of Security, 2026-09-10].\n\nCONFIDENCE\n- high: an approved answer or policy section states it directly.\n- medium: the answer is only implied or partially covered.\n- low: not covered by any tool result. Then say \"Not covered by Acme policy - escalated to the Head of Security\" and do not guess.\n\nRESTRICTED TOPICS (always escalate, even with evidence): contractual commitments that differ from policy, SLAs or service credits, guarantees, liability or indemnity, sharing the full penetration test report, roadmap or future dates.\n\nREVIEW\nCall submit_for_review when: confidence is medium or low, the topic is restricted, or the colleague says the answer will go to a customer in writing (questionnaire, email, RFP). Route high confidence to \"Solutions Engineer\" and everything else to \"Head of Security (CISO)\". Quick verbal questions with high confidence do not need review.\n\nREPLY FORMAT\n**Answer:** the customer-ready answer with citations\n**Confidence:** high / medium / low, with one-line reason\n**Review:** \"Not needed\" or \"Logged for <reviewer>\"\nKeep it concise. Use British English.",
+          "maxIterations": 12
+        }
+      }
+    },
+    {
+      "name": "Claude Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.6,
+      "position": [
+        380,
+        540
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-5",
+          "cachedResultName": "Claude Sonnet 5"
+        },
+        "options": {
+          "maxTokensToSample": 2048
+        }
+      },
+      "credentials": {
+        "anthropicApi": {
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "name": "Conversation Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        540,
+        540
+      ],
+      "parameters": {
+        "sessionIdType": "fromInput",
+        "contextWindowLength": 10
+      }
+    },
+    {
+      "name": "Acme Trust & Compliance (MCP)",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.4,
+      "position": [
+        700,
+        540
+      ],
+      "parameters": {
+        "endpointUrl": "https://YOUR-N8N-INSTANCE/mcp/acme-trust-compliance",
+        "serverTransport": "httpStreamable",
+        "authentication": "none",
+        "include": "all"
+      }
+    },
+    {
+      "name": "About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -260,
+        180
+      ],
+      "parameters": {
+        "color": 5,
+        "width": 420,
+        "height": 380,
+        "content": "## Acme Security Q&A assistant (MCP client)\nFor sales & CS: ask a customer's security question, get a cited, customer-ready answer.\n\n**One agent, one tool connection.** The MCP Client connects to the *Acme - Trust & Compliance MCP Server* workflow and discovers its 4 tools at runtime.\n\n**Try:**\n- Do you encrypt customer data at rest?\n- When was your last pen test? It's for an RFP.\n- Are you PCI DSS compliant? *(gap -> escalates)*\n- Will you commit to 24h breach notification in the contract? *(restricted -> escalates)*"
+      }
+    }
+  ],
+  "connections": {
+    "When Chat Message Received": {
+      "main": [
+        [
+          {
+            "node": "Security Q&A Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Security Q&A Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Security Q&A Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Acme Trust & Compliance (MCP)": {
+      "ai_tool": [
+        [
+          {
+            "node": "Security Q&A Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

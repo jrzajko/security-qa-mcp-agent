@@ -1,0 +1,295 @@
+{
+  "name": "Acme - Trust & Compliance MCP Server",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "name": "Trust & Compliance MCP Server",
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 2.1,
+      "position": [
+        500,
+        300
+      ],
+      "parameters": {
+        "authentication": "none",
+        "path": "acme-trust-compliance",
+        "instructions": "Acme SaaS Trust & Compliance tools. Answer security and compliance questions only from these tools. Order: find_approved_answer first, then search_policies, plus get_compliance_status for certifications, audits and testing dates. Cite policy section IDs. Never invent facts. Use submit_for_review for anything that will be sent to a customer in writing, any gap, and any restricted topic."
+      }
+    },
+    {
+      "name": "find_approved_answer",
+      "type": "n8n-nodes-base.dataTableTool",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        520
+      ],
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Search the library of previously approved answers that have already been signed off by Acme reviewers. Always try this FIRST. Pass one short keyword (e.g. \"encrypt\", \"sso\", \"breach\", \"hosting\"). Returns matching approved question/answer pairs with their policy sources, approver and approval date. Call again with a different keyword if nothing relevant comes back.",
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "acme_approved_answers"
+        },
+        "matchType": "anyCondition",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "question",
+              "condition": "ilike",
+              "keyValue": "={{ \"%\" + $fromAI(\"keyword\", \"ONE short keyword or stem to search for, e.g. encrypt, breach, sso, scim, hosting, retention, pen test\", \"string\") + \"%\" }}"
+            },
+            {
+              "keyName": "keywords",
+              "condition": "ilike",
+              "keyValue": "={{ \"%\" + $fromAI(\"keyword\", \"ONE short keyword or stem to search for, e.g. encrypt, breach, sso, scim, hosting, retention, pen test\", \"string\") + \"%\" }}"
+            },
+            {
+              "keyName": "topic",
+              "condition": "ilike",
+              "keyValue": "={{ \"%\" + $fromAI(\"keyword\", \"ONE short keyword or stem to search for, e.g. encrypt, breach, sso, scim, hosting, retention, pen test\", \"string\") + \"%\" }}"
+            }
+          ]
+        },
+        "returnAll": false,
+        "limit": 5
+      }
+    },
+    {
+      "name": "search_policies",
+      "type": "n8n-nodes-base.dataTableTool",
+      "typeVersion": 1.1,
+      "position": [
+        400,
+        520
+      ],
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Search Acme SaaS policy documents (information security, AI governance, model card, data retention, sub-processors, incident response, hosting, identity/SSO/SCIM, privacy, business continuity). Pass one short keyword or stem (e.g. \"encrypt\", \"notif\", \"region\", \"backup\", \"train\"), or a section ID such as \"IR-4\". Returns policy sections with section_id (use it as the citation), text, owner and last review date. Call several times with different keywords if needed.",
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "acme_policy_sections"
+        },
+        "matchType": "anyCondition",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "section_id",
+              "condition": "ilike",
+              "keyValue": "={{ \"%\" + $fromAI(\"keyword\", \"ONE short keyword or stem to search for, e.g. encrypt, breach, sso, scim, hosting, retention, pen test\", \"string\") + \"%\" }}"
+            },
+            {
+              "keyName": "section_title",
+              "condition": "ilike",
+              "keyValue": "={{ \"%\" + $fromAI(\"keyword\", \"ONE short keyword or stem to search for, e.g. encrypt, breach, sso, scim, hosting, retention, pen test\", \"string\") + \"%\" }}"
+            },
+            {
+              "keyName": "text",
+              "condition": "ilike",
+              "keyValue": "={{ \"%\" + $fromAI(\"keyword\", \"ONE short keyword or stem to search for, e.g. encrypt, breach, sso, scim, hosting, retention, pen test\", \"string\") + \"%\" }}"
+            }
+          ]
+        },
+        "returnAll": false,
+        "limit": 8
+      }
+    },
+    {
+      "name": "get_compliance_status",
+      "type": "n8n-nodes-base.dataTableTool",
+      "typeVersion": 1.1,
+      "position": [
+        600,
+        520
+      ],
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Get Acme's current certifications, audits and security testing evidence with dates: ISO 27001, SOC 2 Type II, penetration test, disaster recovery test, incident response exercise, ISO 42001 status, ICO registration. Use for any question about certifications, audits, attestations, pen tests or \"when was X last done\". Takes no input.",
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "acme_compliance_status"
+        },
+        "returnAll": true
+      }
+    },
+    {
+      "name": "submit_for_review",
+      "type": "n8n-nodes-base.dataTableTool",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        520
+      ],
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Log a drafted answer in the review queue so a human signs it off before it goes to a customer in writing. Provide the question, the draft answer, the sources used, a confidence level (high, medium or low), the reason for that level, and the reviewer: \"Solutions Engineer\" for high confidence, \"Head of Security (CISO)\" for medium/low confidence, gaps, or any restricted topic. Returns the queue entry.",
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "acme_review_queue"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "question": "={{ $fromAI(\"question\", \"The customer question exactly as asked\", \"string\") }}",
+            "draft_answer": "={{ $fromAI(\"draft_answer\", \"The drafted answer text, or NOT COVERED BY POLICY if there is no evidence\", \"string\") }}",
+            "sources": "={{ $fromAI(\"sources\", \"Comma-separated policy section IDs or approved answer used, e.g. ISP-6, IR-4. Empty if none\", \"string\") }}",
+            "confidence": "={{ $fromAI(\"confidence\", \"high, medium or low\", \"string\") }}",
+            "reason": "={{ $fromAI(\"reason\", \"One sentence explaining the confidence level and routing\", \"string\") }}",
+            "reviewer": "={{ $fromAI(\"reviewer\", \"Solutions Engineer or Head of Security (CISO)\", \"string\") }}",
+            "status": "Pending review",
+            "requested_by": "={{ $fromAI(\"requested_by\", \"Who asked, e.g. the rep or team name if known, otherwise Security Q&A assistant\", \"string\") }}"
+          },
+          "schema": [
+            {
+              "id": "question",
+              "displayName": "question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "draft_answer",
+              "displayName": "draft_answer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sources",
+              "displayName": "sources",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "confidence",
+              "displayName": "confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reviewer",
+              "displayName": "reviewer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "requested_by",
+              "displayName": "requested_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        180
+      ],
+      "parameters": {
+        "color": 4,
+        "width": 440,
+        "height": 340,
+        "content": "## Acme Trust & Compliance MCP server\nA shared tool library for any agent that needs Acme's security knowledge.\n\n**Tools**\n1. `find_approved_answer` - signed-off answers\n2. `search_policies` - 67 policy sections with citation IDs\n3. `get_compliance_status` - certifications & testing dates\n4. `submit_for_review` - human review queue\n\nData lives in n8n Data Tables (`acme_*`). In production, swap each tool's backend (SharePoint, Confluence, GRC platform) - clients don't change.\n\nEndpoint: `/mcp/acme-trust-compliance`"
+      }
+    }
+  ],
+  "connections": {
+    "find_approved_answer": {
+      "ai_tool": [
+        [
+          {
+            "node": "Trust & Compliance MCP Server",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "search_policies": {
+      "ai_tool": [
+        [
+          {
+            "node": "Trust & Compliance MCP Server",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_compliance_status": {
+      "ai_tool": [
+        [
+          {
+            "node": "Trust & Compliance MCP Server",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "submit_for_review": {
+      "ai_tool": [
+        [
+          {
+            "node": "Trust & Compliance MCP Server",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
