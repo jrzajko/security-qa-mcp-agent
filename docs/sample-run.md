@@ -41,6 +41,25 @@ A fifth question was asked live in the n8n chat for the README screenshots: *"Pr
 | When was your last penetration test, and can we send them the full report? | high | ISP-7 | Head of Security (CISO) | Pending review |
 | Legal at a prospect wants us to commit to breach notification within 24 hours… | medium | IR-4 | Head of Security (CISO) | Pending review |
 
+## Second client: Claude
+
+The same MCP server added to Claude as a custom connector (see the README), with only that connector switched on. Question: *"A prospect asks if we encrypt customer data at rest and when our last pen test was. What can I tell them?"*
+
+![Claude answering through the Acme connector](images/07-claude-as-second-client.png)
+
+**Same as the n8n agent**
+- Same facts and citations: AES-256 via AWS KMS [ISP-6] from the approved answer, and the pen test on 12 June 2026 from the compliance record [ISP-7].
+- Same guardrails: the full pen test report isn't shared, only the executive summary under NDA.
+- It followed the server's instructions (approved answers first, compliance record for dates, written answers need review) without having the n8n agent's system prompt.
+
+**Different, and why**
+- **It separated approved wording from its own drafting.** It flagged that the encryption text is pre-approved but the pen test sentence was written from the compliance record.
+- **It asked before logging for review** rather than calling `submit_for_review` automatically. The n8n agent's prompt tells it to log straight away; Claude, without that instruction, treated writing to the queue as an action to confirm first.
+- **Different format.** The Answer / Confidence / Review layout lives in the n8n agent's prompt, not the server. To make it consistent across clients, move it into the server instructions.
+- **Extra context.** It volunteered ISO 27001 and SOC 2 from the same compliance call.
+
+**Takeaway:** two different AI clients, one shared tool library: same facts, same citations, same guardrails, nothing rebuilt. Rules in the server apply everywhere; rules in an agent's prompt apply only to that agent.
+
 ## Observations
 - The agent picked different tool combinations per question; nothing in the workflow fixes the order.
 - It never invented a PCI answer: two keyword searches in each source came back empty, so it escalated.

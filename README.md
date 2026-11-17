@@ -125,7 +125,13 @@ The same server can be added to Claude as a custom connector, so Claude uses the
 3. **Authentication: choose "No sign-in".** The server uses a fixed token, not OAuth. Leaving it on "Sign in now" makes Claude attempt OAuth and the server answers 403.
 4. **Request headers → Add header:** name `Authorization`, value `Bearer <your token>` (one space after *Bearer*, nothing after the token).
 5. Leave transport on **Streamable HTTP** and click **Add**.
-6. In a new chat, turn it on via **+ → Connectors** and ask a security question.
+6. In a new chat, turn it on (**+ → Plugins**) and ask a security question.
+
+   ![Acme connector switched on in Claude](docs/images/08-claude-connector-toggle.png)
+
+Claude answering through the connector. Same facts and citations as the n8n agent, nothing rebuilt:
+
+![Claude using the Acme Trust & Compliance connector](docs/images/07-claude-as-second-client.png)
 
 Claude doesn't get the n8n agent's system prompt. It only receives what the server provides: the tool descriptions and the server instructions (check approved answers first, cite section IDs, never invent facts, escalate gaps). Rules placed in the server apply to every client; rules in an agent's prompt apply only to that agent.
 
