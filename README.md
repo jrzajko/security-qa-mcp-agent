@@ -6,6 +6,8 @@ It is built as **one AI agent with one tool connection**: an MCP client that plu
 
 > The company, policies and evidence are fictional ("Acme SaaS"). They reuse the policy pack from [ai-questionnaire-responder](https://github.com/jrzajko/ai-questionnaire-responder).
 
+![Demo: the agent, the MCP server, a live question, one tool call, and the review queue](docs/images/demo.gif)
+
 ## Demo
 
 **Asking a question.** A colleague pastes a prospect's questionnaire item. The agent answers with policy citations, rates its confidence and logs the answer for sign-off because it's going out in writing. The log on the right shows each MCP tool call it chose to make.
